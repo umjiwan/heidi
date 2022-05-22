@@ -19,7 +19,7 @@ class heidi:
             pass
 
 class runGame:
-    def __init__(self, title="heidi", fps=60, size=68):
+    def __init__(self, title="heidi", fps=60, size=68, path="data/img"):
         pygame.init()
         pygame.display.set_caption(title)
 
@@ -29,6 +29,13 @@ class runGame:
         self.clock = pygame.time.Clock()
         self.mapCode = 1
         self.running = False
+
+        blockList = []
+        blockList.append(None)
+        blockList.append(pygame.image.load(f"{path}/1.jpg"))
+
+        self.blockList = blockList
+        
 
     def getEvent(self):
         for event in pygame.event.get():
@@ -40,11 +47,13 @@ class runGame:
             self.mapData = np.loadtxt(file, delimiter=",")
 
     def drawMap(self):
-        self.getMap(self)
-        
-        for i in range(self.mapData):
-            print(i)
-        
+        self.getMap()
+        for y in range(np.shape(self.mapData)[0]):
+            for x in range(np.shape(self.mapData)[1]):
+                if self.mapData[y][x] == 1:
+                    self.screen.blit(self.blockList[1], (x*self.size, y*self.size))
+
+        pygame.display.update()
 
     def run(self):
         self.running = True
