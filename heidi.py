@@ -2,18 +2,21 @@ import numpy as np
 import pygame
 import os
 
-class heidi:
+class heidi: # 주인공 클래스
     def __init__(self, name="heidi", hp=20, spd=5, pos=[0, 0], atk=5, jumping=False):
-        self.name = name
-        self.hp = hp
-        self.spd = spd
-        self.pos = pos
-        self.atk = atk
-        self.jumping = jumping
+        self.name = name # 주인공 이름
+        self.hp = hp # 주인공 체력
+        self.spd = spd # 주인공 속도
+        self.pos = pos # 주인공 좌표
+        self.atk = atk # 주인공 공격력
+        self.jumping = jumping # 주인공이 점프 중인지
 
-    def move(self, x=0, y=0):
-        self.pos[0] += x
-        self.pos[1] += y
+    def move(self, size, sprite, x=0, y=0): # 주인공 이동
+        if (self.pos[0] + x) >= 0 and (self.pos[0] + x) + size/2 <= size*16: # 맵 밖으로 벗어나지 않을 경우
+            self.pos[0] += x
+
+        if (self.pos[1] + y) + (size/2) <= size*9:
+            self.pos[1] += y
 
     def jump(self):
         if not self.jumping:
@@ -49,11 +52,12 @@ class runGame:
             if event.type == pygame.QUIT:
                 self.running = False
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT:
-                    self.hd.move(x=self.hd.spd)
-                if event.key == pygame.K_LEFT:
-                    self.hd.move(x=-self.hd.spd)
+        keyEvent = pygame.key.get_pressed()
+
+        if keyEvent[pygame.K_RIGHT]:
+            self.hd.move(self.size, x=self.hd.spd)
+        if keyEvent[pygame.K_LEFT]:
+            self.hd.move(self.size, x=-self.hd.spd)
 
     def getMap(self, path="data/map"):
         with open(f"{path}/{self.mapCode}.csv", "r") as file:
@@ -68,7 +72,10 @@ class runGame:
                         self.screen.blit(self.blockList[block], (x*(self.size/2), y*(self.size/2)))
 
     def drawHeidi(self):
-        pygame.draw.rect(self.screen, (255, 255, 255), self.hd.pos, self.size)
+        pygame.draw.rect(self.screen, (0, 0, 0), (self.hd.pos[0], self.hd.pos[1], self.size/2, self.size/2))
+
+    def gravity(self, gv=5):
+        self.hd.move(self.size, y=gv)
 
     def run(self):
         self.running = True
@@ -76,14 +83,13 @@ class runGame:
             self.clock.tick(self.fps)
             self.getEvent()
 
-            if self.mapChange:
-                self.drawMap()
-                self.mapChange = False
+            self.screen.fill((255, 255, 255))
+            self.drawMap()
+            self.gravity()
 
             self.drawHeidi()
 
-
-            pygame.display.update()
+            pygame.display.flip()
 
 if __name__ == "__main__":
     rg = runGame()
