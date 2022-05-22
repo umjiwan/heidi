@@ -35,7 +35,9 @@ class runGame:
         blockList.append(None)
 
         for i in range(1, len(os.listdir(path))+1):
-            blockList.append(pygame.image.load(f"{path}/{i}.jpg"))
+            img = pygame.image.load(f"{path}/{i}.jpg")
+            img = pygame.transform.scale(img, (size/2, size/2))
+            blockList.append(img)
 
         self.blockList = blockList
 
@@ -61,7 +63,7 @@ class runGame:
         for y in range(np.shape(self.mapData)[0]):
             for x in range(np.shape(self.mapData)[1]):
                 if self.mapData[y][x] == 1:
-                    self.screen.blit(self.blockList[1], (x*self.size, y*self.size))
+                    self.screen.blit(self.blockList[1], (x*(self.size/2), y*(self.size/2)))
 
         pygame.display.update()
 
