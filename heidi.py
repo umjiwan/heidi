@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import os
 
 class heidi:
     def __init__(self, name="heidi", hp=20, spd=5, pos=[0, 0], atk=5, jumping=False):
@@ -32,15 +33,24 @@ class runGame:
 
         blockList = []
         blockList.append(None)
-        blockList.append(pygame.image.load(f"{path}/1.jpg"))
+
+        for i in range(1, len(os.listdir(path))+1):
+            blockList.append(pygame.image.load(f"{path}/{i}.jpg"))
 
         self.blockList = blockList
-        
+
+        self.hd = heidi()
 
     def getEvent(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    self.hd.move(x=self.hd.spd)
+                if event.key == pygame.K_LEFT:
+                    self.hd.move(x=-self.hd.spd)
 
     def getMap(self, path="data/map"):
         with open(f"{path}/{self.mapCode}.csv", "r") as file:
