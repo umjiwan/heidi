@@ -1,96 +1,113 @@
-import numpy as np
 import pygame
+import numpy as np
 import os
+import math
 
-class heidi: # 주인공 클래스
-    def __init__(self, name="heidi", hp=20, spd=5, pos=[0, 0], atk=5, jumping=False):
-        self.name = name # 주인공 이름
-        self.hp = hp # 주인공 체력
-        self.spd = spd # 주인공 속도
-        self.pos = pos # 주인공 좌표
-        self.atk = atk # 주인공 공격력
-        self.jumping = jumping # 주인공이 점프 중인지
 
-    def move(self, size, sprite, x=0, y=0): # 주인공 이동
-        if (self.pos[0] + x) >= 0 and (self.pos[0] + x) + size/2 <= size*16: # 맵 밖으로 벗어나지 않을 경우
-            self.pos[0] += x
+class Heidi:
+    def __init__(self, spd=5, pos=[0,0], moving=[False,False]):
+        self.spd = spd
+        self.pos = pos
+        self.moving = moving
+        self.walkCount = 1
+        self.lookRight = True
 
-        if (self.pos[1] + y) + (size/2) <= size*9:
-            self.pos[1] += y
+    def move(self):
+        if self.moving[0]:
+            self.pos[0] -= self.spd
+            self.lookRight = False
+        if self.moving[1]:
+            self.pos[0] += self.spd
+            self.lookRight = True
 
-    def jump(self):
-        if not self.jumping:
-            pass
+        if self.moving[0] or self.moving[1]:
+            self.walkCount += 1
+            if self.walkCount > 16:
+                self.walkCount = 1
+        else:
+            self.walkCount = 1
 
-class runGame:
-    def __init__(self, title="heidi", fps=60, size=68, path="data/img"):
+        walk = math.ceil(self.walkCount / 4)
+
+        self.walkImg = pygame.image.load(f"data/img/sprite/heidi/walk{walk}.png")
+        self.walkImg = pygame.transform.scale(self.walkImg, (50, 50))
+
+        if not self.lookRight:
+            self.walkImg = pygame.transform.flip(self.walkImg, True, False)
+
+
+class QueeenHeidisAdventure:
+    def __init__(self, width=720, height=1280, fps=60, title="퀸턘의 모험"):
         pygame.init()
         pygame.display.set_caption(title)
 
-        self.size = size
-        self.screen = pygame.display.set_mode((16*size, 9*size))
-        self.fps = fps
+        self.screen = pygame.display.set_mode((height, width))
         self.clock = pygame.time.Clock()
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.title = title
         self.mapCode = 1
-        self.running = False
-        self.mapChange = True
 
-        blockList = []
-        blockList.append(None)
-
-        for i in range(1, len(os.listdir(f"{path}/block"))+1):
-            img = pygame.image.load(f"{path}/block/{i}.jpg")
-            img = pygame.transform.scale(img, (size/2, size/2))
+        blockList = [None]
+        for i in range(1, len(os.listdir(f"data/img/block"))+1):
+            img = pygame.image.load(f"data/img/block/{i}.jpg")
+            img = pygame.transform.scale(img, (20, 20))
             blockList.append(img)
 
         self.blockList = blockList
 
-        self.hd = heidi()
+        self.hd = Heidi()
 
-    def getEvent(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-        keyEvent = pygame.key.get_pressed()
-
-        if keyEvent[pygame.K_RIGHT]:
-            self.hd.move(self.size, x=self.hd.spd)
-        if keyEvent[pygame.K_LEFT]:
-            self.hd.move(self.size, x=-self.hd.spd)
-
-    def getMap(self, path="data/map"):
-        with open(f"{path}/{self.mapCode}.csv", "r") as file:
-            self.mapData = np.loadtxt(file, delimiter=",")
-
-    def drawMap(self):
-        self.getMap()
-        for y in range(np.shape(self.mapData)[0]):
-            for x in range(np.shape(self.mapData)[1]):
-                for block in range(1, len(self.blockList)+1):
-                    if self.mapData[y][x] == block:
-                        self.screen.blit(self.blockList[block], (x*(self.size/2), y*(self.size/2)))
-
-    def drawHeidi(self):
-        pygame.draw.rect(self.screen, (0, 0, 0), (self.hd.pos[0], self.hd.pos[1], self.size/2, self.size/2))
-
-    def gravity(self, gv=5):
-        self.hd.move(self.size, y=gv)
+        
 
     def run(self):
         self.running = True
         while self.running:
             self.clock.tick(self.fps)
-            self.getEvent()
+            self.eventCheck()
+            self.hd.move()
+            self.draw()
+            
+    def eventCheck(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
 
-            self.screen.fill((255, 255, 255))
-            self.drawMap()
-            self.gravity()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    self.hd.moving[0] = True
+                if event.key == pygame.K_RIGHT:
+                    self.hd.moving[1] = True
 
-            self.drawHeidi()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    self.hd.moving[0] = False
+                if event.key == pygame.K_RIGHT:
+                    self.hd.moving[1] = False
 
-            pygame.display.flip()
+    def draw(self):
+        self.screen.fill((255, 255, 255))
+        self.getMap()
 
-if __name__ == "__main__":
-    rg = runGame()
-    rg.run()
+        for y in range(np.shape(self.mapData)[0]):
+            for x in range(np.shape(self.mapData)[1]):
+                for block in range(1, len(self.blockList)+1):
+                    if self.mapData[y][x] == block:
+                        self.screen.blit(self.blockList[block], [x*20, y*20])
+
+        self.screen.blit(self.hd.walkImg, self.hd.pos)
+
+        
+
+
+        pygame.display.flip()
+    
+    def getMap(self):
+        with open(f"data/map/{self.mapCode}.csv") as file:
+            self.mapData = np.loadtxt(file, delimiter=",")
+
+
+
+qha = QueeenHeidisAdventure()
+qha.run()
