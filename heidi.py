@@ -30,12 +30,13 @@ class runGame:
         self.clock = pygame.time.Clock()
         self.mapCode = 1
         self.running = False
+        self.mapChange = True
 
         blockList = []
         blockList.append(None)
 
-        for i in range(1, len(os.listdir(path))+1):
-            img = pygame.image.load(f"{path}/{i}.jpg")
+        for i in range(1, len(os.listdir(f"{path}/block"))+1):
+            img = pygame.image.load(f"{path}/block/{i}.jpg")
             img = pygame.transform.scale(img, (size/2, size/2))
             blockList.append(img)
 
@@ -62,17 +63,27 @@ class runGame:
         self.getMap()
         for y in range(np.shape(self.mapData)[0]):
             for x in range(np.shape(self.mapData)[1]):
-                if self.mapData[y][x] == 1:
-                    self.screen.blit(self.blockList[1], (x*(self.size/2), y*(self.size/2)))
+                for block in range(1, len(self.blockList)+1):
+                    if self.mapData[y][x] == block:
+                        self.screen.blit(self.blockList[block], (x*(self.size/2), y*(self.size/2)))
 
-        pygame.display.update()
+    def drawHeidi(self):
+        pygame.draw.rect(self.screen, (255, 255, 255), self.hd.pos, self.size)
 
     def run(self):
         self.running = True
         while self.running:
             self.clock.tick(self.fps)
             self.getEvent()
-            self.drawMap()
+
+            if self.mapChange:
+                self.drawMap()
+                self.mapChange = False
+
+            self.drawHeidi()
+
+
+            pygame.display.update()
 
 if __name__ == "__main__":
     rg = runGame()
