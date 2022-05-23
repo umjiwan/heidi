@@ -5,12 +5,13 @@ import math
 
 
 class Heidi:
-    def __init__(self, spd=5, pos=[0,0], moving=[False,False]):
+    def __init__(self, spd=3, pos=[0,0], moving=[False,False,False]):
         self.spd = spd
         self.pos = pos
         self.moving = moving
         self.walkCount = 1
         self.lookRight = True
+        self.heidiSize = 1
 
     def move(self):
         if self.moving[0]:
@@ -27,21 +28,25 @@ class Heidi:
         else:
             self.walkCount = 1
 
+        if self.moving[2]:
+            self.pos[1] += 5
+        
+
         walk = math.ceil(self.walkCount / 4)
 
         self.walkImg = pygame.image.load(f"data/img/sprite/heidi/walk{walk}.png")
-        self.walkImg = pygame.transform.scale(self.walkImg, (50, 50))
+        self.walkImg = pygame.transform.scale(self.walkImg, (30*self.heidiSize, 42*self.heidiSize))
 
         if not self.lookRight:
             self.walkImg = pygame.transform.flip(self.walkImg, True, False)
 
 
 class QueeenHeidisAdventure:
-    def __init__(self, width=720, height=1280, fps=60, title="퀸턘의 모험"):
+    def __init__(self, width=1280, height=720, fps=60, title="퀸턘의 모험"):
         pygame.init()
         pygame.display.set_caption(title)
 
-        self.screen = pygame.display.set_mode((height, width))
+        self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         self.width = width
         self.height = height
@@ -59,14 +64,16 @@ class QueeenHeidisAdventure:
 
         self.hd = Heidi()
 
-        
+        self.getMap()
+        self.getMapArray()
 
     def run(self):
         self.running = True
         while self.running:
             self.clock.tick(self.fps)
-            self.eventCheck()
             self.hd.move()
+            self.eventCheck()
+            self.gravity()
             self.draw()
             
     def eventCheck(self):
@@ -88,7 +95,6 @@ class QueeenHeidisAdventure:
 
     def draw(self):
         self.screen.fill((255, 255, 255))
-        self.getMap()
 
         for y in range(np.shape(self.mapData)[0]):
             for x in range(np.shape(self.mapData)[1]):
@@ -98,15 +104,38 @@ class QueeenHeidisAdventure:
 
         self.screen.blit(self.hd.walkImg, self.hd.pos)
 
-        
-
-
         pygame.display.flip()
     
     def getMap(self):
         with open(f"data/map/{self.mapCode}.csv") as file:
             self.mapData = np.loadtxt(file, delimiter=",")
 
+    def gravity(self):
+        self.hd.moving[2] = True
+
+    def getMapArray(self):
+        mapArray = np.zeros((self.height, self.width))
+        
+        blockSize = int(self.height / np.shape(self.mapData)[1])
+        blockArray = np.full((blockSize, blockSize), 2)
+
+        for y in range(np.shape(self.mapData)[0]):
+            for x in range(np.shape(self.mapData)[1]):
+                if not (self.mapData[y][x] == 0):
+                    mapArray[y*blockSize:(y+1)*blockSize, x*blockSize:(x+1)*blockSize] = blockArray
+
+        self.mapArray = mapArray
+
+        
+
+        
+                    
+
+        
+        
+        
+
+    
 
 
 qha = QueeenHeidisAdventure()
