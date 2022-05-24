@@ -3,7 +3,6 @@ import numpy as np
 import os
 import math
 
-
 class Heidi:
     def __init__(self):
         self.speed = 3
@@ -125,12 +124,31 @@ class QueeenHeidisAdventure:
     def checkFloorCrash(self):
         y = self.hd.pos["y"] + self.hd.heidiSize["height"]
         try:
-            if np.all(self.mapDetailData[y][self.hd.pos["x"]:self.hd.pos["x"] + self.hd.heidiSize["width"]] == 0):
+            if np.all(self.mapDetailData[y+1][self.hd.pos["x"]:self.hd.pos["x"] + self.hd.heidiSize["width"] - 1] == 0):
                 return False
             else:
                 return True
         except:
             pass
+
+    def checkWallLeftSide(self):
+        x = self.hd.pos["x"]
+        y = self.hd.pos["y"]
+
+        if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x-1] == 0):
+            pass
+        else:
+            self.hd.direction["left"] = False
+
+    def checkWallRightSide(self):
+        x = self.hd.pos["x"]
+        y = self.hd.pos["y"]
+
+        if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x + self.hd.heidiSize["width"] + 1] == 0):
+            pass
+        else:
+            self.hd.direction["right"] = False
+
 
     def gravity(self):
         self.hd.direction["down"] = not self.checkFloorCrash()
@@ -162,12 +180,14 @@ class QueeenHeidisAdventure:
         self.running = True
         while self.running:
             self.clock.tick(self.fps)
+            
             self.hd.moveHeidi()
             self.eventCheck()
+
+            self.checkWallLeftSide()
+            self.checkWallRightSide()
             self.gravity()
             self.draw()
-
-        
 
 qha = QueeenHeidisAdventure()
 qha.run()
