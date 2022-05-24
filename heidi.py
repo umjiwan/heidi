@@ -29,7 +29,7 @@ class Heidi:
             self.walkCount = 1
 
         if self.moving[2]:
-            self.pos[1] += 5
+            self.pos[1] += 1
         
 
         walk = math.ceil(self.walkCount / 4)
@@ -82,15 +82,15 @@ class QueeenHeidisAdventure:
                 self.running = False
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_a:
                     self.hd.moving[0] = True
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_d:
                     self.hd.moving[1] = True
 
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_a:
                     self.hd.moving[0] = False
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_d:
                     self.hd.moving[1] = False
 
     def draw(self):
@@ -111,12 +111,15 @@ class QueeenHeidisAdventure:
             self.mapData = np.loadtxt(file, delimiter=",")
 
     def gravity(self):
-        self.hd.moving[2] = True
+        if not self.checkCrashMap():
+            self.hd.moving[2] = True
+        else:
+            self.hd.moving[2] = False
 
     def getMapArray(self):
         mapArray = np.zeros((self.height, self.width))
         
-        blockSize = int(self.height / np.shape(self.mapData)[1])
+        blockSize = int(self.width / np.shape(self.mapData)[1])
         blockArray = np.full((blockSize, blockSize), 2)
 
         for y in range(np.shape(self.mapData)[0]):
@@ -126,17 +129,19 @@ class QueeenHeidisAdventure:
 
         self.mapArray = mapArray
 
-        
+    def checkCrashMap(self):
+        y = self.hd.pos[1] + 42
+        heidiWidth = self.hd.heidiSize * 30
+        print(self.mapArray[y][self.hd.pos[0]:self.hd.pos[0]+heidiWidth])
+        try:
+            if np.all(self.mapArray[y][self.hd.pos[0]:self.hd.pos[0]+heidiWidth] == 0):
+                return False
+            else:
+                return True
+        except:
+            pass
 
         
-                    
-
-        
-        
-        
-
-    
-
 
 qha = QueeenHeidisAdventure()
 qha.run()
