@@ -5,40 +5,50 @@ import math
 
 
 class Heidi:
-    def __init__(self, spd=3, pos=[0,0], moving=[False,False,False]):
-        self.spd = spd
-        self.pos = pos
-        self.moving = moving
-        self.walkCount = 1
+    def __init__(self):
+        self.speed = 3
+        self.countWalk = 1
         self.lookRight = True
-        self.heidiSize = 1
 
-    def move(self):
-        if self.moving[0]:
-            self.pos[0] -= self.spd
+        self.heidiSize = 1
+        self.heidiSize = {
+            "width": self.heidiSize * 30,
+            "height": self.heidiSize * 42
+        }
+
+        self.pos = {
+            "x": 0,
+            "y": 0
+        }
+
+        self.direction = {
+            "left": False,
+            "right": False,
+            "up": False,
+            "down": False
+        }
+
+    def moveHeidi(self):
+        if self.direction["left"] == True:
+            self.pos["x"] -= self.speed
             self.lookRight = False
-        if self.moving[1]:
-            self.pos[0] += self.spd
+
+        if self.direction["right"] == True:
+            self.pos["x"] += self.speed
             self.lookRight = True
 
-        if self.moving[0] or self.moving[1]:
-            self.walkCount += 1
-            if self.walkCount > 16:
-                self.walkCount = 1
+        if self.direction["up"] == True:
+            self.pos["y"] -= self.speed
+
+        if self.direction["down"] == True:
+            self.pos["y"] += self.speed
+
+        if self.direction["left"] or self.direction["right"]:
+            self.countWalk += 1
+            if self.countWalk > 4 * 4:
+                self.countWalk = 1
         else:
-            self.walkCount = 1
-
-        if self.moving[2]:
-            self.pos[1] += 1
-        
-
-        walk = math.ceil(self.walkCount / 4)
-
-        self.walkImg = pygame.image.load(f"data/img/sprite/heidi/walk{walk}.png")
-        self.walkImg = pygame.transform.scale(self.walkImg, (30*self.heidiSize, 42*self.heidiSize))
-
-        if not self.lookRight:
-            self.walkImg = pygame.transform.flip(self.walkImg, True, False)
+            self.countWalk = 1
 
 
 class QueeenHeidisAdventure:
@@ -53,70 +63,29 @@ class QueeenHeidisAdventure:
         self.fps = fps
         self.title = title
         self.mapCode = 1
+        self.hd = Heidi()
 
+
+        self.blockList = self.loadBlockList()
+
+        self.mapData = self.loadMap()
+        self.mapDetailData = self.loadDetailMap()
+
+    def loadBlockList(self):
         blockList = [None]
+
         for i in range(1, len(os.listdir(f"data/img/block"))+1):
             img = pygame.image.load(f"data/img/block/{i}.jpg")
             img = pygame.transform.scale(img, (20, 20))
             blockList.append(img)
 
-        self.blockList = blockList
+        return blockList
 
-        self.hd = Heidi()
-
-        self.getMap()
-        self.getMapArray()
-
-    def run(self):
-        self.running = True
-        while self.running:
-            self.clock.tick(self.fps)
-            self.hd.move()
-            self.eventCheck()
-            self.gravity()
-            self.draw()
-            
-    def eventCheck(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_a:
-                    self.hd.moving[0] = True
-                if event.key == pygame.K_d:
-                    self.hd.moving[1] = True
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_a:
-                    self.hd.moving[0] = False
-                if event.key == pygame.K_d:
-                    self.hd.moving[1] = False
-
-    def draw(self):
-        self.screen.fill((255, 255, 255))
-
-        for y in range(np.shape(self.mapData)[0]):
-            for x in range(np.shape(self.mapData)[1]):
-                for block in range(1, len(self.blockList)+1):
-                    if self.mapData[y][x] == block:
-                        self.screen.blit(self.blockList[block], [x*20, y*20])
-
-        self.screen.blit(self.hd.walkImg, self.hd.pos)
-
-        pygame.display.flip()
-    
-    def getMap(self):
+    def loadMap(self):
         with open(f"data/map/{self.mapCode}.csv") as file:
-            self.mapData = np.loadtxt(file, delimiter=",")
+            return np.loadtxt(file, delimiter=",")
 
-    def gravity(self):
-        if not self.checkCrashMap():
-            self.hd.moving[2] = True
-        else:
-            self.hd.moving[2] = False
-
-    def getMapArray(self):
+    def loadDetailMap(self):
         mapArray = np.zeros((self.height, self.width))
         
         blockSize = int(self.width / np.shape(self.mapData)[1])
@@ -127,19 +96,76 @@ class QueeenHeidisAdventure:
                 if not (self.mapData[y][x] == 0):
                     mapArray[y*blockSize:(y+1)*blockSize, x*blockSize:(x+1)*blockSize] = blockArray
 
-        self.mapArray = mapArray
+        return mapArray
 
-    def checkCrashMap(self):
-        y = self.hd.pos[1] + 42
-        heidiWidth = self.hd.heidiSize * 30
-        print(self.mapArray[y][self.hd.pos[0]:self.hd.pos[0]+heidiWidth])
+    def eventCheck(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    self.hd.direction["left"] = True
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    self.hd.direction["right"] = True
+
+                if event.key == pygame.K_LSHIFT:
+                    self.hd.speed = 5*2
+                
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                    self.hd.direction["left"] = False
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    self.hd.direction["right"] = False
+
+                if event.key == pygame.K_LSHIFT:
+                    self.hd.speed = 5
+            
+    def checkFloorCrash(self):
+        y = self.hd.pos["y"] + self.hd.heidiSize["height"]
         try:
-            if np.all(self.mapArray[y][self.hd.pos[0]:self.hd.pos[0]+heidiWidth] == 0):
+            if np.all(self.mapDetailData[y][self.hd.pos["x"]:self.hd.pos["x"] + self.hd.heidiSize["width"]] == 0):
                 return False
             else:
                 return True
         except:
             pass
+
+    def gravity(self):
+        self.hd.direction["down"] = not self.checkFloorCrash()
+
+    def loadWalkImg(self, walkNumber):
+        walkNumber = math.ceil(walkNumber / 4)
+        walkImg = pygame.image.load(f"data/img/sprite/heidi/walk{walkNumber}.png")
+        walkImg = pygame.transform.scale(walkImg, (self.hd.heidiSize["width"], self.hd.heidiSize["height"]))
+
+        if not self.hd.lookRight:
+            walkImg = pygame.transform.flip(walkImg, True, False)
+
+        return walkImg
+            
+    def draw(self):
+        self.screen.fill((255, 255, 255))
+
+        for y in range(np.shape(self.mapData)[0]):
+            for x in range(np.shape(self.mapData)[1]):
+                for block in range(1, len(self.blockList) + 1):
+                    if self.mapData[y][x] == block:
+                        self.screen.blit(self.blockList[block], [x*20, y*20])
+
+        self.screen.blit(self.loadWalkImg(self.hd.countWalk), [self.hd.pos["x"], self.hd.pos["y"]])
+
+        pygame.display.flip()
+
+    def run(self):
+        self.running = True
+        while self.running:
+            self.clock.tick(self.fps)
+            self.hd.moveHeidi()
+            self.eventCheck()
+            self.gravity()
+            self.draw()
 
         
 
