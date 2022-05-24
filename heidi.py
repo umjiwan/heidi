@@ -7,7 +7,9 @@ class Heidi:
     def __init__(self):
         self.speed = 3
         self.countWalk = 1
+        self.countJump = 0
         self.lookRight = True
+        self.jumping = False
 
         self.heidiSize = 1
         self.heidiSize = {
@@ -20,35 +22,34 @@ class Heidi:
             "y": 0
         }
 
-        self.direction = {
-            "left": False,
-            "right": False,
-            "up": False,
-            "down": False
+        self.direction = { # bool, weight
+            "left": [False, 1],
+            "right": [False, 1],
+            "up": [False, 1],
+            "down": [False, 1]
         }
 
     def moveHeidi(self):
-        if self.direction["left"] == True:
-            self.pos["x"] -= self.speed
+        if self.direction["left"][0] == True:
+            self.pos["x"] -= self.speed * self.direction["left"][1]
             self.lookRight = False
 
-        if self.direction["right"] == True:
-            self.pos["x"] += self.speed
+        if self.direction["right"][0] == True:
+            self.pos["x"] += self.speed * self.direction["right"][1]
             self.lookRight = True
 
-        if self.direction["up"] == True:
-            self.pos["y"] -= self.speed
+        if self.direction["up"][0] == True:
+            self.pos["y"] -= self.speed * self.direction["up"][1]
 
-        if self.direction["down"] == True:
-            self.pos["y"] += self.speed
+        if self.direction["down"][0] == True:
+            self.pos["y"] += self.speed * self.direction["down"][1]
 
-        if self.direction["left"] or self.direction["right"]:
+        if self.direction["left"][0] or self.direction["right"][0]:
             self.countWalk += 1
             if self.countWalk > 4 * 4:
                 self.countWalk = 1
         else:
             self.countWalk = 1
-
 
 class QueeenHeidisAdventure:
     def __init__(self, width=1280, height=720, fps=60, title="퀸턘의 모험"):
@@ -104,22 +105,18 @@ class QueeenHeidisAdventure:
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.hd.direction["left"] = True
+                    self.hd.direction["left"][0] = True
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.hd.direction["right"] = True
+                    self.hd.direction["right"][0] = True
 
-                if event.key == pygame.K_LSHIFT:
-                    self.hd.speed = 5*2
-                
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.jumpHeidi()
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.hd.direction["left"] = False
+                    self.hd.direction["left"][0] = False
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.hd.direction["right"] = False
-
-                if event.key == pygame.K_LSHIFT:
-                    self.hd.speed = 5
+                    self.hd.direction["right"][0] = False
             
     def checkFloorCrash(self):
         y = self.hd.pos["y"] + self.hd.heidiSize["height"]
@@ -139,7 +136,7 @@ class QueeenHeidisAdventure:
             if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x-1] == 0):
                 pass
             else:
-                self.hd.direction["left"] = False
+                self.hd.direction["left"][0] = False
         except:
             pass
 
@@ -151,12 +148,16 @@ class QueeenHeidisAdventure:
             if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x + self.hd.heidiSize["width"] + 1] == 0):
                 pass
             else:
-                self.hd.direction["right"] = False
+                self.hd.direction["right"][0] = False
         except:
             pass
 
+    def jumpHeidi(self):
+        if self.checkFloorCrash():
+            self.hd.pos["y"] = self.hd.pos["y"] - 50
+            
     def gravity(self):
-        self.hd.direction["down"] = not self.checkFloorCrash()
+        self.hd.direction["down"][0] = not self.checkFloorCrash()
 
     def loadWalkImg(self, walkNumber):
         walkNumber = math.ceil(walkNumber / 4)
