@@ -135,20 +135,25 @@ class QueeenHeidisAdventure:
         x = self.hd.pos["x"]
         y = self.hd.pos["y"]
 
-        if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x-1] == 0):
+        try:
+            if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x-1] == 0):
+                pass
+            else:
+                self.hd.direction["left"] = False
+        except:
             pass
-        else:
-            self.hd.direction["left"] = False
 
     def checkWallRightSide(self):
         x = self.hd.pos["x"]
         y = self.hd.pos["y"]
 
-        if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x + self.hd.heidiSize["width"] + 1] == 0):
+        try:
+            if np.all(self.mapDetailData[y:y + self.hd.heidiSize["height"] - 1, x + self.hd.heidiSize["width"] + 1] == 0):
+                pass
+            else:
+                self.hd.direction["right"] = False
+        except:
             pass
-        else:
-            self.hd.direction["right"] = False
-
 
     def gravity(self):
         self.hd.direction["down"] = not self.checkFloorCrash()
